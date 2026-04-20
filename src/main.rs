@@ -1,12 +1,13 @@
 use macroquad::prelude::*;
 
 mod ui;
-use ui::{SettingsMenu, draw_menu};
+use ui::{SettingsMenu, draw_menu, draw_settings};
 
 mod levels;
 use levels::draw_level;
 
 mod assets;
+use assets::*;
 
 #[derive(Debug)]
 enum State {
@@ -17,15 +18,17 @@ enum State {
 
 #[macroquad::main("Project: VoidMarch")]
 pub async fn main() {
-    let state: State = State::Menu;
+    let mut state: State = State::Menu;
+
+    let assets = Assets::load().await;
 
     loop {
         clear_background(BLACK);
 
-        match state {
-            State::Menu => draw_menu(),
+        match &mut state {
+            State::Menu => draw_menu(&mut state),
             State::Settings(menu) => draw_settings(&menu),
-            State::Level(id) => draw_level(id),
+            State::Level(id) => draw_level(*id, &assets),
         }
 
         next_frame().await

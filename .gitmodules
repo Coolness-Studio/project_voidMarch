@@ -1,0 +1,3 @@
+[submodule "tellus_level"]
+	path = tellus_level
+	url = git@github.com:gusahlg/tellus-level.git
