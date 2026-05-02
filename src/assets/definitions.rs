@@ -1,11 +1,11 @@
 /// This file has the definitions for the structs containing the textures
 use macroquad::prelude::*;
 
-pub struct Level {
+pub struct Tiles {
     pub base_tile: Texture2D, // We'll add in more easily as we go
     pub grass: Texture2D,
 }
-impl Level {
+impl Tiles {
     pub async fn load() -> Self {
         // EXAMPLE
         let base_tile = load_texture("assets/textures/tiles/base_tile.png")
