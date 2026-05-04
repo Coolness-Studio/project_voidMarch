@@ -1,4 +1,6 @@
 /// This defines the LevelError enum that holds different level related error data.
+use std::fmt;
+use std::error::Error;
 use tellus_level::{LevelFormatError, LevelIoError};
 
 #[derive(Debug)]

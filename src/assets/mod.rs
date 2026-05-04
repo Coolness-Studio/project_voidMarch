@@ -1,6 +1,4 @@
 /// This file loads and exposes all assets to the rest of the codebase
-use tellus_level as tlvl;
-
 pub mod definitions;
 use definitions::*;
 
@@ -14,23 +12,21 @@ pub struct Assets {
     pub tiles: Tiles,
     pub enemies: Enemies,
     pub player_races: Races,
-
-    pub lvl1: Level,
-    pub lvl2: Level,
-    pub lvl3: Level,
-    pub lvl4: Level,
+    pub levels: Levels,
 }
 
 impl Assets {
     pub async fn load() -> Self {
-        let level = Level::load().await;
+        let tiles = Tiles::load().await;
         let enemies = Enemies::load().await;
         let player_races = Races::load().await;
+        let levels = Levels::load().await;
 
         Self {
-            level,
+            tiles,
             enemies,
             player_races,
+            levels,
         }
     }
 }
