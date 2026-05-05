@@ -1,33 +1,75 @@
 /// Level storage and loading is defined here
+use std::{error::Error, fmt, path::PathBuf};
 use tellus_level::Level as TellusLevel;
-use std::ops::Deref;
+use tellus_level::LevelIoError;
+
+// We add in more levels here as we go
+const LEVEL_IDS: [u8; 1] = [0];
 
 pub struct Levels {
-    levels: [TellusLevel; 4],
+    levels: Vec<LoadedLevel>,
+}
+
+struct LoadedLevel {
+    id: u8,
+    level: TellusLevel,
+}
+
+// I think we should maybe possibly move the error type to its own file in the future.
+#[derive(Debug)]
+pub struct LevelLoadError {
+    id: u8,
+    path: PathBuf,
+    source: LevelIoError,
+}
+
+impl LevelLoadError {
+    fn new(id: u8, path: PathBuf, source: LevelIoError) -> Self {
+        Self { id, path, source }
+    }
+}
+
+impl fmt::Display for LevelLoadError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "failed to load level {} from {}: {}",
+            self.id,
+            self.path.display(),
+            self.source
+        )
+    }
+}
+
+impl Error for LevelLoadError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        Some(&self.source)
+    }
 }
 
 impl Levels {
-    pub async fn load() -> Result<Levels, LoadingError> {
-        let lvl1 = Self::load_level(1).await?;
-        let lvl2 = Self::load_level(2).await?;
-        let lvl3 = Self::load_level(3).await?;
-        let lvl4 = Self::load_level(4).await?;
+    pub async fn load() -> Result<Levels, LevelLoadError> {
+        let mut levels = Vec::with_capacity(LEVEL_IDS.len());
 
-        Ok(Levels{levels: [lvl1, lvl2, lvl3, lvl4]})
+        for id in LEVEL_IDS {
+            levels.push(LoadedLevel {
+                id,
+                level: Self::load_level(id)?,
+            });
+        }
+
+        Ok(Levels { levels })
     }
 
-    async fn load_level(id: u8) -> Result<Levels, LevelError> {
-        let path = format!("assets/levels/{id}.tlvl");
-
-        TellusLevel::load_from_file(&path).map_err(|source| LevelError::LoadFailed { id, path, source })
+    pub fn get(&self, id: u8) -> Option<&TellusLevel> {
+        self.levels.iter()
+            .find(|loaded_level| loaded_level.id == id)
+            .map(|loaded_level| &loaded_level.level)
     }
-}
 
-// Add in so that it derefs to the array of levels
-impl Deref for Levels {
-    type Target = [TellusLevel; 4];
+    fn load_level(id: u8) -> Result<TellusLevel, LevelLoadError> {
+        let path = PathBuf::from(format!("assets/levels/{id}.tlvl"));
 
-    fn deref(&self) -> &Self::Target {
-        &self.levels
+        TellusLevel::load_from_file(&path).map_err(|source| LevelLoadError::new(id, path, source))
     }
 }

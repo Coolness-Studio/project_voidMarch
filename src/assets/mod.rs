@@ -16,19 +16,18 @@ pub struct Assets {
 }
 
 impl Assets {
-    pub async fn load() -> Self {
+    pub async fn load() -> Result<Self, LevelLoadError> {
         let tiles = Tiles::load().await;
         let enemies = Enemies::load().await;
         let player_races = Races::load().await;
-        let levels = Levels::load().await;
+        let levels = Levels::load().await?;
 
-        Self {
+        Ok(Self {
             tiles,
             enemies,
             player_races,
             levels,
-        }
+        })
     }
 }
-
 
