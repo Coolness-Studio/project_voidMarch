@@ -1,49 +1,46 @@
 /// This file handles all level logic
 use macroquad::prelude::*;
-use tellus_level::*;
+use tellus_level::{LayerKind, Level};
 
 mod tiles;
-pub use tiles::*;
+
+mod lvl_error_handling;
+use lvl_error_handling::*;
 
 use super::assets::*;
 
-pub fn draw_level(id: u8, assets: &Assets) {
-    match id {
-        0 => {
-            let mut level = get_level(id);
+pub fn draw_level(id: u8, assets: &Assets) -> Result<(), LevelDrawError> {
+    let level = assets
+        .levels
+        .get(id)
+        .ok_or(LevelDrawError::UnknownLevel { id })?;
 
-            for y in 0..level.height {
-                for x in 0..level.width {
-                    let tile = level.tile(LayerKind::Ground, x, y).unwrap();
+    draw_loaded_level(id, level, assets)
+}
 
-                    // Not sure if this should be in assets now that I think about it
-                    let x_position = (x * TILE_SIZE as u16) as f32;
-                    let y_position = (y * TILE_SIZE as u16) as f32;
+fn draw_loaded_level(id: u8, level: &Level, assets: &Assets) -> Result<(), LevelDrawError> {
+    for y in 0..level.height {
+        for x in 0..level.width {
+            let tile = level
+                .tile(LayerKind::Ground, x, y)
+                .map_err(|source| LevelDrawError::TileReadFailed { id, x, y, source })?;
 
-                    match tile {
-                        0u16 => draw_texture(&assets.level.base_tile, x_position, y_position, WHITE),
-                        1u16 => draw_texture(&assets.level.grass, x_position, y_position, WHITE),
-                        _ => panic!("Tile type not known!"),
-                    }
-                }
+            let x_position = f32::from(x) * f32::from(TILE_SIZE);
+            let y_position = f32::from(y) * f32::from(TILE_SIZE);
+
+            if let Some(texture) = level_tile_texture(assets, tile) {
+                draw_texture(texture, x_position, y_position, WHITE);
             }
-
         }
+    }
 
-        1 => {
+    Ok(())
+}
 
-        }
-
-        _ => panic!("Level does not exist"),
+fn level_tile_texture(assets: &Assets, tile: u16) -> Option<&Texture2D> {
+    match tile {
+        0 => Some(&assets.tiles.base_tile),
+        1 => Some(&assets.tiles.grass),
+        _ => None,
     }
 }
-
-pub fn get_level(id: u8) -> Level {
-    let path = format!("assets/levels/{}.tlvl", id);
-
-    // We might want to have it return a Result instead to not make this an unrecoverable error
-    Level::load_from_file(&path).expect("Level does not exist!")
-}
-
-
-
