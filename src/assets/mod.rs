@@ -12,6 +12,10 @@ pub struct Assets {
     pub tiles: Tiles,
     pub enemies: Enemies,
     pub player_races: Races,
+    pub ui: Ui,
+    pub furniture: Furniture,
+    pub weapons: Weapons,
+    pub cutscenes: Cutscenes,
     pub levels: Levels,
 }
 
@@ -20,14 +24,21 @@ impl Assets {
         let tiles = Tiles::load().await;
         let enemies = Enemies::load().await;
         let player_races = Races::load().await;
+        let ui = Ui::load().await;
+        let furniture = Furniture::load().await;
+        let weapons = Weapons::load().await;
+        let cutscenes = Cutscenes::load().await;
         let levels = Levels::load().await?;
 
         Ok(Self {
             tiles,
             enemies,
             player_races,
+            ui,
+            furniture,
+            weapons,
+            cutscenes,
             levels,
         })
     }
 }
-
